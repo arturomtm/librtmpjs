@@ -1,4 +1,5 @@
 const net = require('net')
+const Handshake = require('./handshake')
 
 class RTMPSocket {
   constructor({host = 'localhost', port = 1935, app, swfUrl, tcUrl, pageUrl} = {}) {
@@ -8,8 +9,12 @@ class RTMPSocket {
   }
 
   doHandshake(socket) {
+    new Handshake(socket)
+    .once("handshake:done", socket => this.doConnect(socket))
+  }
+
+  doConnect(socket) {
   }
 }
 
 module.exports = RTMPSocket
-
