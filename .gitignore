@@ -1,2 +1,4 @@
+.vscode
 node_modules/
 test/config.json
+test/mocks/*.config.js
