@@ -1,5 +1,6 @@
 const net = require('net')
 const Handshake = require('./handshake')
+const ChunkStream = require('./chunk_stream')
 
 class RTMPSocket {
   constructor({host = 'localhost', port = 1935, app, swfUrl, tcUrl, pageUrl} = {}) {
@@ -14,6 +15,10 @@ class RTMPSocket {
   }
 
   doConnect(socket) {
+    const chunkStream = new ChunkStream(ChunkStream.CONTROL_STREAM_ID)
+
+    chunkStream.encoder.pipe(socket)
+    socket.pipe(chunkStream.decoder)
   }
 }
 
