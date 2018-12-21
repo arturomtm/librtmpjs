@@ -50,7 +50,11 @@ class ChunkStreamEncoder extends Transform {
     return header
   }
   _transform(message, encoding, done) {
-    const info = this.messageStream.getMessageInfo(message, 'id', 'length', 'typeId')
+    const info = {
+      id: this.messageStream.id,
+      length: message.length,
+      typeId: this.messageStream.getMessageType()
+    }
     if (!info.length) return;
     for(let i=0; i < info.length;) {
       const chunk = message.slice(i, i + this.config.size)
@@ -70,15 +74,15 @@ class ChunkStreamEncoder extends Transform {
   }
 }
 
-const int2array = (n, bytes, be = true) => {
+const int2array = (n, bytes) => {
   const arr = []
   for (let i=0; i < bytes; ++i) {
     arr[i] = (n >> 8 * i) & 0xFF
   }
-  return be ? arr.reverse() : arr
+  return arr
 }
 
-const int2arrayBE = (n, bytes) => int2array(n, bytes)
-const int2arrayLE = (n, bytes) => int2array(n, bytes, false)
+const int2arrayBE = (n, bytes) => int2array(n, bytes).reverse()
+const int2arrayLE = (n, bytes) => int2array(n, bytes)
 
 exports.ChunkStreamEncoder = ChunkStreamEncoder

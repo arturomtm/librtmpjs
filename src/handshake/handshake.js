@@ -43,15 +43,16 @@ class Handshake extends EventEmitter {
 function Handshake(socket) {
   EventEmitter.call(this);
   this.socket = socket;
-  socket.on("data", this._onData.bind(this));
+  socket.on("connect", () => this.emit("uninitialized"))
+  socket.on("data", data => this._onData(data));
   this.state = INITIAL_STATE;
   this.S0 = new Buffer(0)
   this.S1 = new Buffer(0)
   this.S2 = new Buffer(0)
   this.once("handshake:s1", this.sendC2.bind(this));
   this.once("handshake:s2", this._done.bind(this));
-  this.emit("handshake:start");
-  this.sendC0C1();
+  // this.emit("handshake:start");
+  // this.sendC0C1();
 }
 inherits(Handshake, EventEmitter);
 
