@@ -29,6 +29,7 @@ class NetConnection extends Readable { // NetStreamEncoder {
     // this.messageType = MessageStreamEncoder.MESSAGE_TYPE_COMMAND_AMF0
   }
 
+  /*
   getMessageInfo(message, ...info) {
     return {
       id: this.id,
@@ -43,6 +44,7 @@ class NetConnection extends Readable { // NetStreamEncoder {
       3: NetConnection.MESSAGE_TYPE_COMMAND_AMF3
     }[this.amf.encoding]
   }
+  */
 
   connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}) {
     const command = this.getConnectCommand(...arguments)
