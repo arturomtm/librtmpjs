@@ -43,79 +43,75 @@ class Handshake extends EventEmitter {
 function Handshake(socket) {
   EventEmitter.call(this);
   this.socket = socket;
-  socket.on("connect", () => this.emit("uninitialized"))
-  socket.on("data", data => this._onData(data));
   this.state = INITIAL_STATE;
-  this.S0 = new Buffer(0)
-  this.S1 = new Buffer(0)
-  this.S2 = new Buffer(0)
-  this.once("handshake:s1", this.sendC2.bind(this));
-  this.once("handshake:s2", this._done.bind(this));
-  // this.emit("handshake:start");
-  // this.sendC0C1();
+  this._resetBuffer()
+
+  const _onData = data => this._onData(data)
+  socket.on("data", _onData)
+  socket.once("connect", () => this.emit("uninitialized"))
+  this.once('handshake:s0', s0 => this.onS0(s0))
+  this.once("handshake:s1", s1 => this.onS1(s1))
+  this.once("handshake:s2", () => {
+    socket.removeListener("data", _onData)
+    this.emit("handshake:done", socket);
+    this.socket = null
+  })
 }
 inherits(Handshake, EventEmitter);
 
-Handshake.prototype.sendC0 = function() {
-  var packet = new Buffer([PROTOCOL_VERSION]);
-  this.socket.write(packet);
-};
+Handshake.prototype._resetBuffer = function() {
+  this._buffer = new Buffer(0)
+}
 
-Handshake.prototype.receiveS0 = function() {
-  if (this.S0[0] !== PROTOCOL_VERSION) throw new Error("Protocol version unknown");
-  return true;
-};
-
-Handshake.prototype.sendC1 = function() {
+Handshake.prototype.c0 = function() {
+  const packet = new Buffer(1)
+  packet.writeUInt8(PROTOCOL_VERSION)
+  return packet
+}
+Handshake.prototype.c1 = function() {
   var packet = generateRandom(RANDOM_LENGTH);
-  clock.setEpoch();
-  packet.writeDoubleBE(Date.now(), 0);
+  // clock.setEpoch();
+  packet.writeUInt32BE(clock.time(), 0)
   packet.writeUInt32BE(0, 4);
-  this.socket.write(packet);
-};
-
-Handshake.prototype.receiveS1 = function() {
-  return true;
-};
+  return packet
+}
+Handshake.prototype.c2 = function(s1) {
+  s1.writeUInt32BE(clock.time(), 4);
+  return s1
+}
 
 Handshake.prototype.sendC0C1 = function() {
-  var packet = generateRandom(RANDOM_LENGTH + 1);
-  packet.writeUInt8(PROTOCOL_VERSION)
-  packet.writeUInt32BE(clock.time(), 1);
-  packet.writeUInt32BE(0, 5);
-  this.socket.write(packet);
-};
+  const packet = Buffer.concat([this.c0(), this.c1()])
+  this.socket.write(packet)
+}
+Handshake.prototype.sendC2 = function(s1) {
+  const packet = this.c2(s1)
+  this.socket.write(packet)
+}
 
-Handshake.prototype.sendC2 = function() {
-  //this.S1.writeUInt32BE(clock.time(), 4);
-  console.log()
-  this.socket.write(this.S1);
-};
-
-Handshake.prototype.receiveS2 = function() {
-  return true;
-};
+Handshake.prototype.onS0 = function(s0) {
+  if (s0[0] !== PROTOCOL_VERSION)
+    this.emit('error', new Error("Protocol version unknown"))
+}
+Handshake.prototype.onS1 = function(s1) {
+  this.sendC2(s1)
+  this.emit('ack:sent')
+}
+Handshake.prototype.onS2 = function(s2) {
+}
 
 Handshake.prototype._onData = function(data) {
   if (!data.length) return;
   
-  var checkPacketFor = function(state){ return this["receive" + state].call(this); }.bind(this);
-  console.log("DATA", data)
-  var state = "S" + this.state,
-      len = PACKETS_LENGTHS[this.state] - this[state].length;
+  var packetLength = PACKETS_LENGTHS[this.state],
+      len = packetLength - this._buffer.length
 
-  this[state] = Buffer.concat([this[state], data.slice(0, len)]);
-  if (this[state].length === PACKETS_LENGTHS[this.state]  && checkPacketFor(state)) {
-    this.emit("handshake:s" + this.state++);
+  this._buffer = Buffer.concat([this._buffer, data.slice(0, len)])
+  if (this._buffer.length === packetLength) {
+    this.emit(`handshake:s${this.state++}`, Buffer.from(this._buffer))
+    this._resetBuffer()
   }
   this._onData(data.slice(len));
-};
-
-Handshake.prototype._done = function _done() {
-  //this.socket.removeListener("data", this._onData);
-  this.socket.removeAllListeners();
-  this.emit("handshake:done", this.socket);
-  this.socket = null;
 };
 
 function generateRandom(len){
