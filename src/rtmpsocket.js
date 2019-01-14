@@ -1,5 +1,5 @@
 const net = require('net')
-const Handshake = require('./handshake')
+const { Handshake } = require('./handshake')
 const ChunkStream = require('./chunk_stream')
 const NetConnection = require('./net_connection')
 const ControlStream = require('./control_stream')

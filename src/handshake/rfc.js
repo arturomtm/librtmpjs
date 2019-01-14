@@ -7,7 +7,7 @@ const RANDOM_LENGTH = 1536,
       PROTOCOL_VERSION = 0x03,
       INITIAL_STATE = 0;
 
-class Handshake extends EventEmitter {
+class RFCHandshake extends EventEmitter {
   constructor(socket) {
     super()
     this.socket = socket;
@@ -89,4 +89,4 @@ class Handshake extends EventEmitter {
   }
 }
 
-exports.Handshake = Handshake;
+module.exports = RFCHandshake
