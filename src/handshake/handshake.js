@@ -1,11 +1,11 @@
-var { EventEmitter } = require("events")
+const { EventEmitter } = require("events")
+const { generateRandomBuffer } = require('../util')
+const clock = require("../services/time");
 
 const RANDOM_LENGTH = 1536,
       PACKETS_LENGTHS = [1, RANDOM_LENGTH, RANDOM_LENGTH],
       PROTOCOL_VERSION = 0x03,
       INITIAL_STATE = 0;
-
-var clock = require("../services/time");
 
 class Handshake extends EventEmitter {
   constructor(socket) {
@@ -36,7 +36,7 @@ class Handshake extends EventEmitter {
     return packet
   }
   c1(s0) {
-    var packet = generateRandom(RANDOM_LENGTH);
+    var packet = generateRandomBuffer(RANDOM_LENGTH);
     // clock.setEpoch();
     packet.writeUInt32BE(clock.time(), 0)
     packet.writeUInt32BE(0, 4);
@@ -87,15 +87,6 @@ class Handshake extends EventEmitter {
     }
     this._onData(data.slice(len));
   }
-}
-
-function generateRandom(len){
-  var packet = new Buffer(len);
-  for (var i = 0; i < len; i++){
-    var byte = Math.floor(Math.random() * 256);
-    packet.writeUInt8(byte, i);
-  }
-  return packet;
 }
 
 exports.Handshake = Handshake;
