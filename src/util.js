@@ -8,7 +8,7 @@ function generateRandomBuffer(len){
 }
 
 function mandatoryParam(name) {
-  throw new Error(`The parameter ${param} is mandatory`)
+  throw new Error(`The parameter ${name} is mandatory`)
 }
 
 module.exports = {

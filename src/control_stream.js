@@ -1,8 +1,9 @@
-const Writable = require("stream").Writable
+const Duplex = require("stream").Duplex
 
 class ControlStream extends Duplex {
   constructor(protocolParams) {
     super({objectMode: true})
+    this.chunkStreamId = ControlStream.CHUNK_STREAM_ID
     this.id = 0
     this.protocolParams = protocolParams
   }

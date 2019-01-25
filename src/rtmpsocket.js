@@ -1,5 +1,5 @@
 const net = require('net')
-const { Handshake } = require('./handshake')
+const { Handshake, EncryptedHandshake } = require('./handshake')
 const ChunkStream = require('./chunk_stream')
 const NetConnection = require('./net_connection')
 const ControlStream = require('./control_stream')
@@ -11,15 +11,16 @@ class RTMPSocket {
     const rtmpOptions = {app, swfUrl, tcUrl, pageUrl}
 
     const socket = net.connect({host, port})
-    const handshake = new Handshake(socket)
+    const handshake = new EncryptedHandshake(socket)
     const controlStream = new ControlStream(ChunkStreamParams)
     const netConnection = new NetConnection()
 
-    pipe(controlStream, socket)
-    pipe(netConnection, socket)
-
     handshake.once("uninitialized", () => handshake.sendC0C1())
-    handshake.once("handshake:done", () => netConnection.connect(rtmpOptions))
+    handshake.once("handshake:done", () => {
+      pipe(controlStream, socket)
+      pipe(netConnection, socket)
+      netConnection.connect(rtmpOptions)
+    })
 
     netConnection.once('netconnection:connect:success', () => controlStream.ackWindowSize())
     netConnection.once('netconnection:connect:success', () => netConnection.createStream())
@@ -27,7 +28,7 @@ class RTMPSocket {
 }
 
 const pipe = (stream, socket) => {
-  const chunkStream = new ChunkStream(stream.CHUNK_STREAM_ID)
+  const chunkStream = new ChunkStream(stream.chunkStreamId)
   stream.pipe(chunkStream.encoder).pipe(socket)
   socket.pipe(chunkStream.decoder).pipe(stream)
 }

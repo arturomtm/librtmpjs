@@ -1,5 +1,5 @@
 // const NetStreamEncoder = require("./net_stream/encoder")
-const Readable = require("stream").Readable
+const Duplex = require("stream").Duplex
 const AMF = require('amf')
 const util = require('./util')
 
@@ -15,21 +15,21 @@ const MESSAGE_TYPE_DATA_AMF0 = 18,
 
 const AMF3_ENCODING = 3
 
-const flashVer = "WIN 10,0,0,32,18"
+const flashVer = "WIN 32,0,0,114"
 const SUPPORT_VID_CLIENT_SEEK = 1 
 
-class NetConnection extends Readable { // NetStreamEncoder {
+class NetConnection extends Duplex { // NetStreamEncoder {
 
   constructor(options) {
     // super(NetConnection.NET_CONNECTION_STREAM_ID, options)
     super(options)
+    this.chunkStreamId = NetConnection.CHUNK_STREAM_ID
     this.id = NetConnection.NET_CONNECTION_STREAM_ID
     this.transactionId = 1
     this.amf = new AMF.AMF0()
     // this.messageType = MessageStreamEncoder.MESSAGE_TYPE_COMMAND_AMF0
   }
 
-  /*
   getMessageInfo(message, ...info) {
     return {
       id: this.id,
@@ -44,10 +44,9 @@ class NetConnection extends Readable { // NetStreamEncoder {
       3: NetConnection.MESSAGE_TYPE_COMMAND_AMF3
     }[this.amf.encoding]
   }
-  */
 
   connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}) {
-    const command = this.getConnectCommand(...arguments)
+    const command = this.getConnectCommand({app, tcUrl, pageUrl, swfUrl})
     this.send('connect', command)
   }
 
@@ -66,7 +65,7 @@ class NetConnection extends Readable { // NetStreamEncoder {
 
   getConnectCommand(options) {
     const {app, tcUrl, pageUrl, swfUrl} = options
-    const defaultOptions = { 
+    const defaultOptions = {
       flashVer,
       fpad: false,
 	    capabilities: 15,
@@ -75,9 +74,7 @@ class NetConnection extends Readable { // NetStreamEncoder {
       videoFunction: SUPPORT_VID_CLIENT_SEEK,
       objectEncoding: this.amf.encoding
     }
-    const commandObject = Object.assign(defaultOptions, options)
-    if (app === undefined || tcUrl === undefined)
-      throw new Error("app or tcUrl missing")
+    const commandObject = { app, tcUrl, ...defaultOptions }
     pageUrl && (commandObject.pageUrl = pageUrl)
     swfUrl && (commandObject.swfUrl = swfUrl)
     return commandObject
@@ -99,6 +96,10 @@ class NetConnection extends Readable { // NetStreamEncoder {
   }
 
   _read() {}
+
+  _write(chunk, encoding, done) {
+    console.log(chunk)
+  }
 }
 
 NetConnection.CHUNK_STREAM_ID = 3
