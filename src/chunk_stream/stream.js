@@ -1,11 +1,9 @@
-const ChunkStreamDecoder = require('./decoder').ChunkStreamDecoder
 const ChunkStreamEncoder = require('./encoder').ChunkStreamEncoder
 const Clock = require('../services/time')
 const defaultConfig = require('./config')
 
 class ChunkStream {
   constructor(id) {
-    this.decoder = new ChunkStreamDecoder(id)
     this.encoder = new ChunkStreamEncoder(id, defaultConfig)
     this.encoder.clock = Clock
   }

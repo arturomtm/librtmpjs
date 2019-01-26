@@ -1,10 +1,10 @@
 const Transform = require('stream').Transform
 
+const MAX_CHUNK_HEADER_LENGTH = 11
+
 class ChunkStreamDecoder extends Transform {
-  constructor(id) {
+  constructor() {
     super({ readableObjectMode: true })
-    if (id < 2) throw new Error("Reserved Ids")
-    this.id = id
     this.chunk = Buffer.from([])
   }
   _decodeBasicHeader(header) {
@@ -44,10 +44,9 @@ class ChunkStreamDecoder extends Transform {
   _getCurrentMessage() {
     const rawBasicHeader = this.chunk.slice(0, 3)
     const {fmt, id} = this._decodeBasicHeader(rawBasicHeader)
-    if (this.id !== id) throw new Error('WRONG_CHUNK ' + id + ` ${this.id}`)
-    const offset = this._getBasicHeaderLength(id)
-    const payloadOffset = offset + 11 - 4 * fmt
-    const rawMessageHeader = this.chunk.slice(offset, payloadOffset)
+    const basicHeaderOffset = this._getBasicHeaderLength(id)
+    const payloadOffset = basicHeaderOffset + (MAX_CHUNK_HEADER_LENGTH - 4 * fmt)
+    const rawMessageHeader = this.chunk.slice(basicHeaderOffset, payloadOffset)
     const messageHeader = this._decodeMessageHeader(rawMessageHeader, {fmt, id})
     this.chunk = this.chunk.slice(payloadOffset)
     return { fmt, id, ...messageHeader }
@@ -68,8 +67,8 @@ class ChunkStreamDecoder extends Transform {
     try {
       this.processChunk()
     } catch(e) {
-      console.log(chunk, e.message)
-      if (e.message === 'WRONG_CHUNK') this.chunk = Buffer.from([])
+      console.log(e.message)
+    } finally {
       done()
     }
   }

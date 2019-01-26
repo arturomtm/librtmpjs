@@ -1,6 +1,7 @@
 const net = require('net')
 const { Handshake, EncryptedHandshake } = require('./handshake')
 const ChunkStream = require('./chunk_stream')
+const { ChunkStreamDecoder } = require('./chunk_stream/decoder')
 const NetConnection = require('./net_connection')
 const ControlStream = require('./control_stream')
 const TimeService = require('./services/time')
@@ -27,10 +28,12 @@ class RTMPSocket {
   }
 }
 
+const chunkStreamDecoder = new ChunkStreamDecoder()
+
 const pipe = (stream, socket) => {
   const chunkStream = new ChunkStream(stream.chunkStreamId)
   stream.pipe(chunkStream.encoder).pipe(socket)
-  socket.pipe(chunkStream.decoder).pipe(stream)
+  socket.pipe(chunkStreamDecoder).pipe(stream)
 }
 
 module.exports = RTMPSocket

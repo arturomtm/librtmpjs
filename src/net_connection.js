@@ -98,7 +98,9 @@ class NetConnection extends Duplex { // NetStreamEncoder {
   _read() {}
 
   _write(chunk, encoding, done) {
-    console.log(chunk)
+    if (this.chunkStreamId === chunk.id) {
+      console.log(chunk)
+    }
   }
 }
 
