@@ -22,7 +22,7 @@ class NetConnection extends Duplex { // NetStreamEncoder {
 
   constructor(options) {
     // super(NetConnection.NET_CONNECTION_STREAM_ID, options)
-    super(options)
+    super({ ...options, writableObjectMode: true })
     this.chunkStreamId = NetConnection.CHUNK_STREAM_ID
     this.id = NetConnection.NET_CONNECTION_STREAM_ID
     this.transactionId = 1
