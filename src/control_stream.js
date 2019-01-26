@@ -21,8 +21,8 @@ class ControlStream extends Duplex {
     this.push(res)
   }
 
-  _write(chunk, encoding, done) {
-    switch(chunk.messageType){
+  _write(message, encoding, done) {
+    switch(message.typeId){
     /* case ControlStream.SET_CHUNK_SIZE:
       this.onSetChunkSize()
       break
@@ -31,11 +31,12 @@ class ControlStream extends Duplex {
       break
     case ControlStream.ACK:
       this.onAck()
-      break
+      break */
     case ControlStream.WINDOW_ACK_SIZE: 
-      this.onAckWindowSize()
+      const windowSize = message.message.readUInt32BE(0)
+      this.onAckWindowSize(windowSize)
       break
-    case ControlStream.SET_PEER_BANDWIDTH: 
+    /* case ControlStream.SET_PEER_BANDWIDTH: 
       const { payload } = chunk
       const windowSize = payload.readUInt32BE(0)
       const limitType = payload.readUInt8(4)
@@ -46,13 +47,15 @@ class ControlStream extends Duplex {
   }
   _read() {}
 
+  onAckWindowSize(windowSize) {
+    console.log('windowSize', windowSize)
+  }
+
   /* onSetChunkSize(size) {}
 
   onAbort(chunkStreamId) {}
 
   onAck(seqNum) {}
-
-  onAckWindowSize(windowSize) {}
 
   onSetPeerBandwidth(windowSize, limitType) {
     // ignore limit type by now

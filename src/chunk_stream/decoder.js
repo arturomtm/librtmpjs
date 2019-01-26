@@ -2,7 +2,7 @@ const Transform = require('stream').Transform
 
 class ChunkStreamDecoder extends Transform {
   constructor(id) {
-    super({})
+    super({ readableObjectMode: true })
     if (id < 2) throw new Error("Reserved Ids")
     this.id = id
     this.chunk = Buffer.from([])
@@ -41,28 +41,37 @@ class ChunkStreamDecoder extends Transform {
     }
     return {timestamp, length, typeId, streamId}
   }
-  resetChunk() {
-    this.chunk = Buffer.from([])
-  }
-  _transform(message, encoding, done) {
-    const rawBasicHeader = message.slice(0, 3)
+  _getCurrentMessage() {
+    const rawBasicHeader = this.chunk.slice(0, 3)
     const {fmt, id} = this._decodeBasicHeader(rawBasicHeader)
-    if (this.id === id) {
-      const offset = this._getBasicHeaderLength(id)
-      const payloadOffset = offset + 11 - 4 * fmt
-      const rawMessageHeader = message.slice(offset, payloadOffset)
-      const payload = message.slice(payloadOffset)
-      const {timestamp, length, typeId, streamId} = this._decodeMessageHeader(rawMessageHeader, {fmt, id})
-      if (fmt === 0 || fmt === 1) {
-        this.resetChunk()
+    if (this.id !== id) throw new Error('WRONG_CHUNK ' + id + ` ${this.id}`)
+    const offset = this._getBasicHeaderLength(id)
+    const payloadOffset = offset + 11 - 4 * fmt
+    const rawMessageHeader = this.chunk.slice(offset, payloadOffset)
+    const messageHeader = this._decodeMessageHeader(rawMessageHeader, {fmt, id})
+    this.chunk = this.chunk.slice(payloadOffset)
+    return { fmt, id, ...messageHeader }
+  }
+  processChunk() {
+      const messageHeader = this._getCurrentMessage()
+      const { length } = messageHeader
+      if (this.chunk.length >= length) {
+        const message = this.chunk.slice(0, length)
+        this.chunk = this.chunk.slice(length)
+        console.log({ ...messageHeader, message })
+        this.push({ ...messageHeader, message })
+        this.processChunk()
       }
-      this.chunk = Buffer.concat([this.chunk, payload])
-      if (this.chunk.length === length) {
-        this.push(this.chunk)
-        this.resetChunk()
-      }
+  }
+  _transform(chunk, encoding, done) {
+    this.chunk = Buffer.concat([this.chunk, chunk])
+    try {
+      this.processChunk()
+    } catch(e) {
+      console.log(chunk, e.message)
+      if (e.message === 'WRONG_CHUNK') this.chunk = Buffer.from([])
+      done()
     }
-    done()
   }
 }
 
