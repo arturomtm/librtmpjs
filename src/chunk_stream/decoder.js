@@ -13,8 +13,9 @@ class ChunkStreamDecoder extends Transform {
     switch(id) {
     case 0:
       id = header.readUInt8(1) + 64
+      break
     case 1:
-      id = header.readUInt16(1) + 64
+      id = header.readUInt16BE(1) + 64
     }
     return {id, fmt}
   }
