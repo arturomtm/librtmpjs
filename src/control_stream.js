@@ -22,47 +22,51 @@ class ControlStream extends Duplex {
   }
 
   _write(chunk, encoding, done) {
-    switch(chunk.typeId){
-    /* case ControlStream.SET_CHUNK_SIZE:
-      this.onSetChunkSize()
-      break
-    case ControlStream.ABORT:
-      this.onAbort()
-      break
-    case ControlStream.ACK:
-      this.onAck()
-      break */
-    case ControlStream.WINDOW_ACK_SIZE: 
-      const windowSize = chunk.message.readUInt32BE(0)
-      this.onAckWindowSize(windowSize)
-      break
-    /* case ControlStream.SET_PEER_BANDWIDTH:
-      const { payload } = chunk
-      const windowSize = payload.readUInt32BE(0)
-      const limitType = payload.readUInt8(4)
-      this.onSetPeerBandwidth(windowSize, limitType)
-      break */
+    if (this.chunkStreamId === chunk.id) {
+      const { typeId, message } = chunk
+      switch(typeId){
+      /* case ControlStream.SET_CHUNK_SIZE:
+        this.onSetChunkSize()
+        break
+      case ControlStream.ABORT:
+        this.onAbort()
+        break
+      case ControlStream.ACK:
+        this.onAck()
+        break */
+      case ControlStream.WINDOW_ACK_SIZE: 
+        this.onAckWindowSize(
+          message.readUInt32BE(0)
+        )
+        break
+      case ControlStream.SET_PEER_BANDWIDTH:
+        this.onSetPeerBandwidth(
+          message.readUInt32BE(0),
+          message.readUInt8(4)
+        )
+        break
+      }
     }
     done()
   }
   _read() {}
 
-  onAckWindowSize(windowSize) {
-    console.log('windowSize', windowSize)
+  // All these methods should be callbacks in response to a event
+
+  onAckWindowSize(windowSize) {}
+
+  onSetPeerBandwidth(windowSize, limitType) {
+    // ignore limit type by now
+    if (this.protocolParams.ackWindowSize !== windowSize) {
+      // this.ackWindowSize(windowSize)
+    }
   }
 
   /* onSetChunkSize(size) {}
 
   onAbort(chunkStreamId) {}
 
-  onAck(seqNum) {}
-
-  onSetPeerBandwidth(windowSize, limitType) {
-    // ignore limit type by now
-    if (this.protocolParams.ackWindowSize !== windowSize) {
-      this.ackWindowSize(windowSize)
-    }
-  } */
+  onAck(seqNum) {} */
 }
 
 ControlStream.CHUNK_STREAM_ID = 2
