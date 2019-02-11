@@ -11,18 +11,6 @@ class ChunkStreamDecoder extends Transform {
     this.decodedChunk = {}
     this.remainingLength = 0
   }
-  _decodeBasicHeader(header) {
-    let fmt = (header.readUInt8(0) & 0xC0) >> 6
-    let id = header.readUInt8(0) & 0x3F
-    switch(id) {
-    case 0:
-      id = header.readUInt8(1) + 64
-      break
-    case 1:
-      id = header.readUInt16BE(1) + 64
-    }
-    return {id, fmt}
-  }
   _getBasicHeaderLength(id) {
     switch (true) {
     case id >= 2 && id <= 63:
@@ -33,35 +21,54 @@ class ChunkStreamDecoder extends Transform {
       return 3
     }
   }
+  _getMessageHeaderLength(fmt) {
+    return Math.max(0, MAX_CHUNK_HEADER_LENGTH - 4 * fmt)
+  }
+  _decodeBasicHeader(header) {
+    let id = header.readUInt8(0) & 0x3F
+    switch(id) {
+    case 0:
+      id = header.readUInt8(1) + 64
+      break
+    case 1:
+      id = header.readUInt16BE(1) + 64
+    }
+    const fmt = (header.readUInt8(0) & 0xC0) >> 6
+    const length = this._getBasicHeaderLength(id)
+    return {fmt, id, length}
+  }
   _decodeMessageHeader(header, basicHeader) {
-    let streamId, typeId, length, timestamp
+    const messageHeader = {
+      length: this._getMessageHeaderLength(basicHeader.fmt)
+    }
     switch(basicHeader.fmt) {
     case 0:
-      streamId = header.readUInt32BE(6) & 0x00FFFFFF
+      messageHeader.streamId = header.readUInt32BE(6) & 0x00FFFFFF
     case 1:
-      typeId = header.readUInt8(6)
-      length = header.readUInt32BE(3) >> 8
+      messageHeader.typeId = header.readUInt8(6)
+      messageHeader.payloadLength = header.readUInt32BE(3) >> 8
     case 2:
-      timestamp = header.readUInt32BE(0) >> 8
+      messageHeader.timestamp = header.readUInt32BE(0) >> 8
     }
-    return {timestamp, length, typeId, streamId}
+    return messageHeader
   }
-  _getCurrentMessage() {
+  _getCurrentMessageHeader() {
     const rawBasicHeader = this.chunk.slice(0, MAX_BASIC_HEADER_LENGTH)
     const basicHeader = this._decodeBasicHeader(rawBasicHeader)
 
-    const basicHeaderOffset = this._getBasicHeaderLength(basicHeader.id)
-    const payloadOffset = basicHeaderOffset + Math.max(0, MAX_CHUNK_HEADER_LENGTH - 4 * basicHeader.fmt)
-    const rawMessageHeader = this.chunk.slice(basicHeaderOffset, payloadOffset)
+    const rawMessageHeader = this.chunk.slice(basicHeader.length, basicHeader.length + MAX_CHUNK_HEADER_LENGTH)
     const messageHeader = this._decodeMessageHeader(rawMessageHeader, basicHeader)
 
-    // beware! this modifies buffer and if payload isn't long enough (line 74), it gets lost!
-    this.chunk = this.chunk.slice(payloadOffset)
-    return { ...basicHeader, ...messageHeader }
+    return {
+      ...basicHeader,
+      ...messageHeader,
+      length: basicHeader.length + messageHeader.length
+    }
   }
   processChunk() {
-      const messageHeader = this._getCurrentMessage()
-      const length = Math.min(128, messageHeader.length || this.remainingLength)
+      const messageHeader = this._getCurrentMessageHeader()
+      this.chunk = this.chunk.slice(messageHeader.length)
+      const length = Math.min(128, messageHeader.payloadLength || this.remainingLength)
 
       this.decodedChunk = {
         message: new Buffer(0),
@@ -75,7 +82,7 @@ class ChunkStreamDecoder extends Transform {
           this.chunk.slice(0, length)
         ])
         this.chunk = this.chunk.slice(length)
-        this.remainingLength = messageHeader.length - length
+        this.remainingLength = messageHeader.payloadLength - length
         if (!this.remainingLength) {
           this.push(this.decodedChunk)
           this.decodedChunk = {}
