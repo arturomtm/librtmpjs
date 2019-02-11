@@ -95,12 +95,17 @@ class NetConnection extends Duplex { // NetStreamEncoder {
     this.push(payload)
   }
 
+  receive(message) {
+    const payload = this.amf.decode(message)
+  }
+
   _read() {}
 
   _write(chunk, encoding, done) {
     if (this.chunkStreamId === chunk.id) {
-      console.log(chunk)
+      this.receive(chunk.message)
     }
+    done()
   }
 }
 
