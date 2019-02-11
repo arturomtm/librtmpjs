@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "Handshake": "git+https://github.com/raininfall/rtmp.handshake.git",
+    "Handshake": "git+https://github.com/arturomtm/rtmp.handshake.git",
     "amf": "git+https://github.com/arturomtm/amf.git"
   },
   "devDependencies": {}
