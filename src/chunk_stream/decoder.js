@@ -1,11 +1,15 @@
 const Transform = require('stream').Transform
+const { size } = require('./config')
 
+const MAX_BASIC_HEADER_LENGTH = 3
 const MAX_CHUNK_HEADER_LENGTH = 11
 
 class ChunkStreamDecoder extends Transform {
   constructor() {
     super({ readableObjectMode: true })
     this.chunk = Buffer.from([])
+    this.decodedChunk = {}
+    this.remainingLength = 0
   }
   _decodeBasicHeader(header) {
     let fmt = (header.readUInt8(0) & 0xC0) >> 6
@@ -43,23 +47,39 @@ class ChunkStreamDecoder extends Transform {
     return {timestamp, length, typeId, streamId}
   }
   _getCurrentMessage() {
-    const rawBasicHeader = this.chunk.slice(0, 3)
-    const {fmt, id} = this._decodeBasicHeader(rawBasicHeader)
-    const basicHeaderOffset = this._getBasicHeaderLength(id)
-    const payloadOffset = basicHeaderOffset + (MAX_CHUNK_HEADER_LENGTH - 4 * fmt)
+    const rawBasicHeader = this.chunk.slice(0, MAX_BASIC_HEADER_LENGTH)
+    const basicHeader = this._decodeBasicHeader(rawBasicHeader)
+
+    const basicHeaderOffset = this._getBasicHeaderLength(basicHeader.id)
+    const payloadOffset = basicHeaderOffset + Math.max(0, MAX_CHUNK_HEADER_LENGTH - 4 * basicHeader.fmt)
     const rawMessageHeader = this.chunk.slice(basicHeaderOffset, payloadOffset)
-    const messageHeader = this._decodeMessageHeader(rawMessageHeader, {fmt, id})
+    const messageHeader = this._decodeMessageHeader(rawMessageHeader, basicHeader)
+
+    // beware! this modifies buffer and if payload isn't long enough (line 74), it gets lost!
     this.chunk = this.chunk.slice(payloadOffset)
-    return { fmt, id, ...messageHeader }
+    return { ...basicHeader, ...messageHeader }
   }
   processChunk() {
       const messageHeader = this._getCurrentMessage()
-      const { length } = messageHeader
+      const length = Math.min(128, messageHeader.length || this.remainingLength)
+
+      this.decodedChunk = {
+        message: new Buffer(0),
+        ...this.decodedChunk,
+        ...messageHeader,
+      }
+
       if (this.chunk.length >= length) {
-        const message = this.chunk.slice(0, length)
+        this.decodedChunk.message = Buffer.concat([
+          this.decodedChunk.message,
+          this.chunk.slice(0, length)
+        ])
         this.chunk = this.chunk.slice(length)
-        console.log({ ...messageHeader, message })
-        this.push({ ...messageHeader, message })
+        this.remainingLength = messageHeader.length - length
+        if (!this.remainingLength) {
+          this.push(this.decodedChunk)
+          this.decodedChunk = {}
+        }
         this.processChunk()
       }
   }
