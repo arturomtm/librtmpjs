@@ -8,8 +8,12 @@ class ChunkStreamDecoder extends Transform {
   constructor() {
     super({ readableObjectMode: true })
     this.chunk = Buffer.from([])
-    this.decodedChunk = {}
-    this.remainingLength = 0
+    this.resetPendingMessage()
+  }
+  resetPendingMessage() {
+    this.pendingMessage = {
+      message: new Buffer(0)
+    }
   }
   _getBasicHeaderLength(id) {
     switch (true) {
@@ -65,30 +69,43 @@ class ChunkStreamDecoder extends Transform {
       length: basicHeader.length + messageHeader.length
     }
   }
+  /* canProcessChunk(header) {
+    const { length, payloadLength } = header
+    return this.chunk.length >= length + Math.min(128, payloadLength)
+  } */
+  isChunkBufferEmpty() {
+    return this.chunk.length === 0
+  }
+  getRemainingLength() {
+    const { message, payloadLength = 0 } = this.pendingMessage
+    return payloadLength - message.length
+  }
+  isPendingMessageProcessed() {
+    return this.getRemainingLength() === 0
+  }
   processChunk() {
-      const messageHeader = this._getCurrentMessageHeader()
-      this.chunk = this.chunk.slice(messageHeader.length)
-      const length = Math.min(128, messageHeader.payloadLength || this.remainingLength)
+    if (this.isChunkBufferEmpty()) return
 
-      this.decodedChunk = {
-        message: new Buffer(0),
-        ...this.decodedChunk,
+    const messageHeader = this._getCurrentMessageHeader()
+    const payloadLength = Math.min(128, messageHeader.payloadLength || this.getRemainingLength())
+    const messageLength = messageHeader.length + payloadLength
+
+    // extract condition check to a helper method
+    if (this.chunk.length >= messageLength) {
+      const message = this.chunk.slice(messageHeader.length, messageLength)
+      this.pendingMessage = {
+        ...this.pendingMessage,
         ...messageHeader,
+        message: Buffer.concat([this.pendingMessage.message, message]),
       }
+      this.chunk = this.chunk.slice(messageLength)
 
-      if (this.chunk.length >= length) {
-        this.decodedChunk.message = Buffer.concat([
-          this.decodedChunk.message,
-          this.chunk.slice(0, length)
-        ])
-        this.chunk = this.chunk.slice(length)
-        this.remainingLength = messageHeader.payloadLength - length
-        if (!this.remainingLength) {
-          this.push(this.decodedChunk)
-          this.decodedChunk = {}
-        }
-        this.processChunk()
+      if (this.isPendingMessageProcessed()) {
+        this.push(this.pendingMessage)
+        this.resetPendingMessage()
       }
+      this.processChunk()
+    }
   }
   _transform(chunk, encoding, done) {
     this.chunk = Buffer.concat([this.chunk, chunk])
