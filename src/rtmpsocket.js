@@ -18,8 +18,13 @@ class RTMPSocket {
 
     handshake.once("uninitialized", () => handshake.sendC0C1())
     handshake.once("handshake:done", () => {
+      const chunkStreamDecoder = socket.pipe(new ChunkStreamDecoder())
+
       pipe(controlStream, socket)
+      chunkStreamDecoder.pipe(controlStream)
       pipe(netConnection, socket)
+      chunkStreamDecoder.pipe(netConnection)
+
       netConnection.connect(rtmpOptions)
     })
 
@@ -28,12 +33,9 @@ class RTMPSocket {
   }
 }
 
-const chunkStreamDecoder = new ChunkStreamDecoder()
-
 const pipe = (stream, socket) => {
   const chunkStream = new ChunkStream(stream.chunkStreamId)
   stream.pipe(chunkStream.encoder).pipe(socket)
-  socket.pipe(chunkStreamDecoder).pipe(stream)
 }
 
 module.exports = RTMPSocket
