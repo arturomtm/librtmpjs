@@ -7,7 +7,7 @@ const MAX_CHUNK_HEADER_LENGTH = 11
 class ChunkStreamDecoder extends Transform {
   constructor() {
     super({ readableObjectMode: true })
-    this.chunk = Buffer.from([])
+    this.buffer = Buffer.from([])
     this.resetPendingMessage()
   }
   resetPendingMessage() {
@@ -56,11 +56,11 @@ class ChunkStreamDecoder extends Transform {
     }
     return messageHeader
   }
-  _getCurrentMessageHeader() {
-    const rawBasicHeader = this.chunk.slice(0, MAX_BASIC_HEADER_LENGTH)
+  _getCurrentChunkHeader() {
+    const rawBasicHeader = this.buffer.slice(0, MAX_BASIC_HEADER_LENGTH)
     const basicHeader = this._decodeBasicHeader(rawBasicHeader)
 
-    const rawMessageHeader = this.chunk.slice(basicHeader.length, basicHeader.length + MAX_CHUNK_HEADER_LENGTH)
+    const rawMessageHeader = this.buffer.slice(basicHeader.length, basicHeader.length + MAX_CHUNK_HEADER_LENGTH)
     const messageHeader = this._decodeMessageHeader(rawMessageHeader, basicHeader)
 
     return {
@@ -74,7 +74,7 @@ class ChunkStreamDecoder extends Transform {
     return this.chunk.length >= length + Math.min(128, payloadLength)
   } */
   isChunkBufferEmpty() {
-    return this.chunk.length === 0
+    return this.buffer.length === 0
   }
   getRemainingLength() {
     const { message, payloadLength = 0 } = this.pendingMessage
@@ -86,19 +86,19 @@ class ChunkStreamDecoder extends Transform {
   processChunk() {
     if (this.isChunkBufferEmpty()) return
 
-    const messageHeader = this._getCurrentMessageHeader()
-    const payloadLength = Math.min(128, messageHeader.payloadLength || this.getRemainingLength())
-    const messageLength = messageHeader.length + payloadLength
+    const chunkHeader = this._getCurrentChunkHeader()
+    const payloadLength = Math.min(128, chunkHeader.payloadLength || this.getRemainingLength())
+    const messageLength = chunkHeader.length + payloadLength
 
     // extract condition check to a helper method
-    if (this.chunk.length >= messageLength) {
-      const message = this.chunk.slice(messageHeader.length, messageLength)
+    if (this.buffer.length >= messageLength) {
+      const message = this.buffer.slice(chunkHeader.length, messageLength)
       this.pendingMessage = {
         ...this.pendingMessage,
-        ...messageHeader,
+        ...chunkHeader,
         message: Buffer.concat([this.pendingMessage.message, message]),
       }
-      this.chunk = this.chunk.slice(messageLength)
+      this.buffer = this.buffer.slice(messageLength)
 
       if (this.isPendingMessageProcessed()) {
         this.push(this.pendingMessage)
@@ -108,7 +108,7 @@ class ChunkStreamDecoder extends Transform {
     }
   }
   _transform(chunk, encoding, done) {
-    this.chunk = Buffer.concat([this.chunk, chunk])
+    this.buffer = Buffer.concat([this.buffer, chunk])
     try {
       this.processChunk()
     } catch(e) {
