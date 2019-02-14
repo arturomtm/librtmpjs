@@ -5,15 +5,9 @@ const ProtocolConfig = require('./config')
 class ChunkStreamDecoder extends Transform {
   constructor() {
     super({ readableObjectMode: true })
-    this._lastChunkHeaders = {}
+    this._chunkHeaders = new HeadersCache()
     this.buffer = Buffer.from([])
     this.message = Buffer.from([])
-  }
-  _getLastHeader(chunkId) {
-    return this._lastChunkHeaders[chunkId] || {}
-  }
-  _saveHeader(header) {
-    this._lastChunkHeaders[header.id] = header
   }
   isChunkBufferEmpty() {
     return this.buffer.length === 0
@@ -22,19 +16,18 @@ class ChunkStreamDecoder extends Transform {
     if (this.isChunkBufferEmpty()) return
 
     const newChunkHeader = extractChunkHeader(this.buffer)
-    const lastChunkHeader = this._getLastHeader(newChunkHeader.id)
+    const lastChunkHeader = this._chunkHeaders.get(newChunkHeader.id)
     const chunkHeader = { ...lastChunkHeader, ...newChunkHeader }
     const payloadLength = Math.min(128, chunkHeader.payloadLength - this.message.length)
     const messageLength = chunkHeader.length + payloadLength
 
-    // extract condition check to a helper method
     if (this.buffer.length >= messageLength) {
       this.message = Buffer.concat([
         this.message,
         this.buffer.slice(chunkHeader.length, messageLength)
       ])
       this.buffer = this.buffer.slice(messageLength)
-      this._saveHeader(chunkHeader)
+      this._chunkHeaders.save(chunkHeader)
 
       if (this.message.length === chunkHeader.payloadLength) {
         this.push({
@@ -55,6 +48,18 @@ class ChunkStreamDecoder extends Transform {
     } finally {
       done()
     }
+  }
+}
+
+class HeadersCache {
+  constructor() {
+    this.headers = {}
+  }
+  get(chunkId) {
+    return this.headers[chunkId] || {}
+  }
+  save(header) {
+    this.headers[header.id] = header
   }
 }
 
