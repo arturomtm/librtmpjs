@@ -5,32 +5,26 @@ const ProtocolConfig = require('./config')
 class ChunkStreamDecoder extends Transform {
   constructor() {
     super({ readableObjectMode: true })
+    this._lastChunkHeaders = {}
     this.buffer = Buffer.from([])
-    this.resetPendingMessage()
+    this.message = Buffer.from([])
   }
-  resetPendingMessage() {
-    this.message = new Buffer(0)
-    this.pendingMessage = {}
+  _getLastHeader(chunkId) {
+    return this._lastChunkHeaders[chunkId] || {}
   }
-  /* canProcessChunk(header) {
-    const { length, payloadLength } = header
-    return this.chunk.length >= length + Math.min(128, payloadLength)
-  } */
+  _saveHeader(header) {
+    this._lastChunkHeaders[header.id] = header
+  }
   isChunkBufferEmpty() {
     return this.buffer.length === 0
-  }
-  getRemainingLength() {
-    const { payloadLength = 0 } = this.pendingMessage
-    return payloadLength - this.message.length
-  }
-  isPendingMessageProcessed() {
-    return this.getRemainingLength() === 0
   }
   processChunk() {
     if (this.isChunkBufferEmpty()) return
 
-    const chunkHeader = extractChunkHeader(this.buffer)
-    const payloadLength = Math.min(128, chunkHeader.payloadLength || this.getRemainingLength())
+    const newChunkHeader = extractChunkHeader(this.buffer)
+    const lastChunkHeader = this._getLastHeader(newChunkHeader.id)
+    const chunkHeader = { ...lastChunkHeader, ...newChunkHeader }
+    const payloadLength = Math.min(128, chunkHeader.payloadLength - this.message.length)
     const messageLength = chunkHeader.length + payloadLength
 
     // extract condition check to a helper method
@@ -40,17 +34,14 @@ class ChunkStreamDecoder extends Transform {
         this.buffer.slice(chunkHeader.length, messageLength)
       ])
       this.buffer = this.buffer.slice(messageLength)
-      this.pendingMessage = {
-        ...this.pendingMessage,
-        ...chunkHeader
-      }
+      this._saveHeader(chunkHeader)
 
-      if (this.isPendingMessageProcessed()) {
+      if (this.message.length === chunkHeader.payloadLength) {
         this.push({
-          ...this.pendingMessage,
+          ...chunkHeader,
           message: this.message
         })
-        this.resetPendingMessage()
+        this.message = new Buffer(0)
       }
       this.processChunk()
     }
