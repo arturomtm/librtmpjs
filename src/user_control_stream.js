@@ -20,7 +20,7 @@ class UserControlStream extends Duplex {
     switch(eventType) {
     case PING_REQUEST:
     case PING_RESPONSE:
-      eventData.timestamp = message.readUInt32BE(4)
+      eventData.timestamp = message.readUInt32BE(2)
       break
     case SET_BUFFER_LENGTH:
       eventData.bufferLength = message.readUInt32BE(4)
