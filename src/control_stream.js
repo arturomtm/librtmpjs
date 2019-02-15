@@ -1,16 +1,8 @@
-const Duplex = require("stream").Duplex
+const MessageStream = require('./message_stream')
 
-class ControlStream extends Duplex {
+class ControlStream extends MessageStream {
   constructor(protocolParams) {
-    super({objectMode: true})
-    this.chunkStreamId = ControlStream.CHUNK_STREAM_ID
-    this.id = 0
-    this.protocolParams = protocolParams
-  }
-
-  getMessageType() {
-    if (!this.messageType) throw new Error("No message type set")
-    return this.messageType
+    super(0, ControlStream.CHUNK_STREAM_ID, protocolParams)
   }
 
   ackWindowSize(size = this.protocolParams.windowSize) {
@@ -21,35 +13,30 @@ class ControlStream extends Duplex {
     this.push(res)
   }
 
-  _write(chunk, encoding, done) {
-    if (this.chunkStreamId === chunk.id) {
-      const { typeId, message } = chunk
-      switch(typeId){
-      /* case ControlStream.SET_CHUNK_SIZE:
-        this.onSetChunkSize()
-        break
-      case ControlStream.ABORT:
-        this.onAbort()
-        break
-      case ControlStream.ACK:
-        this.onAck()
-        break */
-      case ControlStream.WINDOW_ACK_SIZE: 
-        this.onAckWindowSize(
-          message.readUInt32BE(0)
-        )
-        break
-      case ControlStream.SET_PEER_BANDWIDTH:
-        this.onSetPeerBandwidth(
-          message.readUInt32BE(0),
-          message.readUInt8(4)
-        )
-        break
-      }
+  _receive({ typeId, message }) {
+    switch(typeId){
+    /* case ControlStream.SET_CHUNK_SIZE:
+      this.onSetChunkSize()
+      break
+    case ControlStream.ABORT:
+      this.onAbort()
+      break
+    case ControlStream.ACK:
+      this.onAck()
+      break */
+    case ControlStream.WINDOW_ACK_SIZE:
+      this.onAckWindowSize(
+        message.readUInt32BE(0)
+      )
+      break
+    case ControlStream.SET_PEER_BANDWIDTH:
+      this.onSetPeerBandwidth(
+        message.readUInt32BE(0),
+        message.readUInt8(4)
+      )
+      break
     }
-    done()
   }
-  _read() {}
 
   // All these methods should be callbacks in response to a event
 
@@ -69,7 +56,8 @@ class ControlStream extends Duplex {
   onAck(seqNum) {} */
 }
 
-ControlStream.CHUNK_STREAM_ID = 2
+ControlStream.CHUNK_STREAM_ID             = 0x02
+
 ControlStream.SET_CHUNK_SIZE              = 0x01
 ControlStream.ABORT                       = 0x02
 ControlStream.ACK                         = 0x03

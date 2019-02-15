@@ -5,7 +5,7 @@ class UserControlStream extends MessageStream {
     super(0, UserControlStream.CHUNK_STREAM_ID)
   }
 
-  _receive(message) {
+  _receive({ message }) {
     const eventType = message.readUInt16BE(0)
     const eventName = UserControlStream.EVENT_NAMES[eventType]
     const eventData = {}

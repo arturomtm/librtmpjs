@@ -1,7 +1,7 @@
 const { Duplex } = require("stream")
 
 class MessageStream extends Duplex {
-  constructor(id, chunkStreamId, protocolParams) {
+  constructor(id, chunkStreamId, protocolParams = {}) {
     super({objectMode: true})
     this.id = id 
     this.chunkStreamId = chunkStreamId
@@ -13,14 +13,14 @@ class MessageStream extends Duplex {
     return this.messageType
   }
   
-  _receive(message) {
+  _receive() {
     throw new Error('_receive must be implemented by derived classes')
   }
 
   // Underlying mandatory-to-implement Stream methods
   _write(chunk, encoding, done) {
     if (this.chunkStreamId === chunk.id) {
-      this._receive(chunk.message)
+      this._receive(chunk)
     }
     done()
   }
