@@ -28,7 +28,6 @@ class RTMPSocket {
       netConnection.connect(rtmpOptions)
     })
 
-    netConnection.once('netconnection:connect:success', () => controlStream.ackWindowSize())
     netConnection.once('netconnection:connect:success', () => netConnection.createStream())
   }
 }
