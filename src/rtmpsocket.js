@@ -4,6 +4,7 @@ const ChunkStream = require('./chunk_stream')
 const { ChunkStreamDecoder } = require('./chunk_stream/decoder')
 const NetConnection = require('./net_connection')
 const ControlStream = require('./control_stream')
+const UserControlStream = require('./user_control_stream')
 const TimeService = require('./services/time')
 const ChunkStreamParams = require('./chunk_stream/config')
 
@@ -14,6 +15,7 @@ class RTMPSocket {
     const socket = net.connect({host, port})
     const handshake = new EncryptedHandshake(socket)
     const controlStream = new ControlStream(ChunkStreamParams)
+    const userControlStream = new UserControlStream()
     const netConnection = new NetConnection()
 
     handshake.once("uninitialized", () => handshake.sendC0C1())
@@ -22,6 +24,8 @@ class RTMPSocket {
 
       pipe(controlStream, socket)
       chunkStreamDecoder.pipe(controlStream)
+      pipe(userControlStream, socket)
+      chunkStreamDecoder.pipe(userControlStream)
       pipe(netConnection, socket)
       chunkStreamDecoder.pipe(netConnection)
 
