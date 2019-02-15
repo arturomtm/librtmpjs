@@ -1,17 +1,10 @@
-const Duplex = require("stream").Duplex
+const MessageStream = require('./message_stream')
 
-class UserControlStream extends Duplex {
-  constructor(protocolParams) {
-    super({objectMode: true})
-    this.chunkStreamId = UserControlStream.CHUNK_STREAM_ID
-    this.id = 0
+class UserControlStream extends MessageStream {
+  constructor() {
+    super(0, UserControlStream.CHUNK_STREAM_ID)
   }
 
-  getMessageType() {
-    if (!this.messageType) throw new Error("No message type set")
-    return this.messageType
-  }
-  
   _receive(message) {
     const eventType = message.readUInt16BE(0)
     const eventName = UserControlStream.EVENT_NAMES[eventType]
@@ -31,17 +24,13 @@ class UserControlStream extends Duplex {
     this.emit(eventName, eventData)
   }
 
-  // Underlying mandatory-to-implement Stream methods
   _write(chunk, encoding, done) {
-    const { typeId, id } = chunk
-    if (typeId === UserControlStream.USER_CONTROL_MESSAGE) {
-      if (this.chunkStreamId === id) {
-        this._receive(chunk.message)
-      }
+    if (chunk.typeId === UserControlStream.USER_CONTROL_MESSAGE) {
+      super._write(chunk, encoding, done)
+    } else {
+      done()
     }
-    done()
   }
-  _read() {}
 
 }
 
