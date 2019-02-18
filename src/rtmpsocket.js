@@ -19,7 +19,7 @@ class RTMPSocket {
     const netConnection = new NetConnection()
 
     handshake.once("uninitialized", () => handshake.sendC0C1())
-    handshake.once("handshake:done", () => {
+    handshake.once("handshake:done", async () => {
       const chunkStreamDecoder = socket.pipe(new ChunkStreamDecoder())
 
       pipe(controlStream, socket)
@@ -29,10 +29,11 @@ class RTMPSocket {
       pipe(netConnection, socket)
       chunkStreamDecoder.pipe(netConnection)
 
-      netConnection.connect(rtmpOptions)
+      try {
+        await netConnection.connect(rtmpOptions)
+        const [info, streamId] = await netConnection.createStream()
+      } catch(error) {}
     })
-
-    netConnection.once('netconnection:connect:success', () => netConnection.createStream())
   }
 }
 

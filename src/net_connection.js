@@ -26,6 +26,7 @@ class NetConnection extends Duplex { // NetStreamEncoder {
     this.chunkStreamId = NetConnection.CHUNK_STREAM_ID
     this.id = NetConnection.NET_CONNECTION_STREAM_ID
     this.transactionId = 0
+    this._commandHistory = [null]
     this.amf = new AMF.AMF0()
     // this.messageType = MessageStreamEncoder.MESSAGE_TYPE_COMMAND_AMF0
   }
@@ -47,7 +48,7 @@ class NetConnection extends Duplex { // NetStreamEncoder {
 
   connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}) {
     const command = this.getConnectCommand({app, tcUrl, pageUrl, swfUrl})
-    this.send('connect', command)
+    return this.send('connect', command)
   }
 
   call() {
@@ -60,7 +61,7 @@ class NetConnection extends Duplex { // NetStreamEncoder {
 
   createStream() {
     const command = this.getCreateStreamCommand(arguments)
-    this.send('createStream', command)
+    return this.send('createStream', command)
   }
 
   getConnectCommand(options) {
@@ -92,18 +93,26 @@ class NetConnection extends Duplex { // NetStreamEncoder {
   send(commandName, ...commandObjects) {
     const chunk = [commandName, this.getTransactionId(), ...commandObjects]
     const payload = this.amf.encode(...chunk)
-    this.push(payload)
+    return new Promise((_result, _error) => {
+      this._commandHistory[this.transactionId] = { _result, _error }
+      this.push(payload)
+    })
   }
 
-  receive(message) {
-    const payload = this.amf.decode(message)
+  receive({ message }) {
+    const [
+      method,
+      transactionId,
+      ...eventData
+    ] = this.amf.decode(message)
+    this._commandHistory[transactionId][method](eventData)
   }
 
   _read() {}
 
   _write(chunk, encoding, done) {
     if (this.chunkStreamId === chunk.id) {
-      this.receive(chunk.message)
+      this.receive(chunk)
     }
     done()
   }
