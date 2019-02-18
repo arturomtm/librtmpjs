@@ -1,6 +1,5 @@
-// const NetStreamEncoder = require("./net_stream/encoder")
-const Duplex = require("stream").Duplex
 const AMF = require('amf')
+const MessageStream = require('./message_stream')
 const util = require('./util')
 
 const NET_CONNECTION_CHUNK_FORMAT = 0
@@ -18,17 +17,13 @@ const AMF3_ENCODING = 3
 const flashVer = "WIN 32,0,0,114"
 const SUPPORT_VID_CLIENT_SEEK = 1 
 
-class NetConnection extends Duplex { // NetStreamEncoder {
+class NetConnection extends MessageStream {
 
   constructor(options) {
-    // super(NetConnection.NET_CONNECTION_STREAM_ID, options)
-    super({ ...options, writableObjectMode: true })
-    this.chunkStreamId = NetConnection.CHUNK_STREAM_ID
-    this.id = NetConnection.NET_CONNECTION_STREAM_ID
+    super(NetConnection.NET_CONNECTION_STREAM_ID, NetConnection.CHUNK_STREAM_ID)
     this.transactionId = 0
     this._commandHistory = [null]
     this.amf = new AMF.AMF0()
-    // this.messageType = MessageStreamEncoder.MESSAGE_TYPE_COMMAND_AMF0
   }
 
   getMessageInfo(message, ...info) {
@@ -99,22 +94,13 @@ class NetConnection extends Duplex { // NetStreamEncoder {
     })
   }
 
-  receive({ message }) {
+  _receive({ message }) {
     const [
       method,
       transactionId,
       ...eventData
     ] = this.amf.decode(message)
     this._commandHistory[transactionId][method](eventData)
-  }
-
-  _read() {}
-
-  _write(chunk, encoding, done) {
-    if (this.chunkStreamId === chunk.id) {
-      this.receive(chunk)
-    }
-    done()
   }
 }
 
