@@ -25,7 +25,7 @@ class NetConnection extends Duplex { // NetStreamEncoder {
     super({ ...options, writableObjectMode: true })
     this.chunkStreamId = NetConnection.CHUNK_STREAM_ID
     this.id = NetConnection.NET_CONNECTION_STREAM_ID
-    this.transactionId = 1
+    this.transactionId = 0
     this.amf = new AMF.AMF0()
     // this.messageType = MessageStreamEncoder.MESSAGE_TYPE_COMMAND_AMF0
   }
@@ -86,7 +86,7 @@ class NetConnection extends Duplex { // NetStreamEncoder {
   }
 
   getTransactionId() {
-    return this.transactionId++
+    return ++this.transactionId
   }
 
   send(commandName, ...commandObjects) {
