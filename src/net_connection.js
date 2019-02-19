@@ -1,5 +1,5 @@
 const AMF = require('amf')
-const MessageStream = require('./message_stream')
+const CommandStream = require('./command_stream')
 const util = require('./util')
 
 const NET_CONNECTION_CHUNK_FORMAT = 0
@@ -12,33 +12,13 @@ const MESSAGE_TYPE_DATA_AMF0 = 18,
       MESSAGE_TYPE_VIDEO = 9,
       MESSAGE_TYPE_AGGREGATE = 22
 
-const AMF3_ENCODING = 3
-
 const flashVer = "WIN 32,0,0,114"
 const SUPPORT_VID_CLIENT_SEEK = 1 
 
-class NetConnection extends MessageStream {
+class NetConnection extends CommandStream {
 
-  constructor(options) {
+  constructor() {
     super(NetConnection.NET_CONNECTION_STREAM_ID, NetConnection.CHUNK_STREAM_ID)
-    this.transactionId = 0
-    this._commandHistory = [null]
-    this.amf = new AMF.AMF0()
-  }
-
-  getMessageInfo(message, ...info) {
-    return {
-      id: this.id,
-      typeId: this.getMessageType(),
-      length: message.length
-    }
-  }
-
-  getMessageType() {
-    return {
-      0: NetConnection.MESSAGE_TYPE_COMMAND_AMF0,
-      3: NetConnection.MESSAGE_TYPE_COMMAND_AMF3
-    }[this.amf.encoding]
   }
 
   connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}) {
@@ -80,33 +60,9 @@ class NetConnection extends MessageStream {
     const commandObject = null
     return {commandObject}
   }
-
-  getTransactionId() {
-    return ++this.transactionId
-  }
-
-  send(commandName, ...commandObjects) {
-    const chunk = [commandName, this.getTransactionId(), ...commandObjects]
-    const payload = this.amf.encode(...chunk)
-    return new Promise((_result, _error) => {
-      this._commandHistory[this.transactionId] = { _result, _error }
-      this.push(payload)
-    })
-  }
-
-  _receive({ message }) {
-    const [
-      method,
-      transactionId,
-      ...eventData
-    ] = this.amf.decode(message)
-    this._commandHistory[transactionId][method](eventData)
-  }
 }
 
 NetConnection.CHUNK_STREAM_ID = 3
 NetConnection.NET_CONNECTION_STREAM_ID = 0
-NetConnection.MESSAGE_TYPE_COMMAND_AMF0 = 20 
-NetConnection.MESSAGE_TYPE_COMMAND_AMF3 = 17
 
 module.exports = NetConnection;
