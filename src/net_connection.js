@@ -1,16 +1,5 @@
-const AMF = require('amf')
 const CommandStream = require('./command_stream')
 const util = require('./util')
-
-const NET_CONNECTION_CHUNK_FORMAT = 0
-
-const MESSAGE_TYPE_DATA_AMF0 = 18,
-      MESSAGE_TYPE_DATA_AMF3 = 15,
-      MESSAGE_TYPE_SHARED_OBJECT_AMF0 = 19,
-      MESSAGE_TYPE_SHARED_OBJECT_AMF3 = 16,
-      MESSAGE_TYPE_AUDIO = 8,
-      MESSAGE_TYPE_VIDEO = 9,
-      MESSAGE_TYPE_AGGREGATE = 22
 
 const flashVer = "WIN 32,0,0,114"
 const SUPPORT_VID_CLIENT_SEEK = 1 
@@ -65,4 +54,4 @@ class NetConnection extends CommandStream {
 NetConnection.CHUNK_STREAM_ID = 3
 NetConnection.NET_CONNECTION_STREAM_ID = 0
 
-module.exports = NetConnection;
+module.exports = NetConnection
