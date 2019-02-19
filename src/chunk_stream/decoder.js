@@ -63,4 +63,4 @@ class HeadersCache {
   }
 }
 
-exports.ChunkStreamDecoder = ChunkStreamDecoder
+module.exports = ChunkStreamDecoder

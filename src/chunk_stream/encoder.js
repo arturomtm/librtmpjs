@@ -1,11 +1,13 @@
 const Transform = require('stream').Transform
+const ProtocolConfig = require('./config')
+const Clock = require('../services/time')
 
 class ChunkStreamEncoder extends Transform {
-  constructor(id, config) {
+  constructor(id) {
     super({})
     if (id < 2) throw new Error("Reserved Ids")
-    this.clock = Date
-    this.config = config
+    // TODO: this MUST be configured via constructor arguments!!!!
+    this.clock = Clock
     this.id = this._encodeId(id)
     this.fmt = 0
     this.lastTimestamp = 0
@@ -57,7 +59,7 @@ class ChunkStreamEncoder extends Transform {
     }
     if (!info.length) return;
     for(let i=0; i < info.length;) {
-      const chunk = message.slice(i, i + this.config.size)
+      const chunk = message.slice(i, i + 128)
       const basicHeader = this._encodeBasicHeader()
       const messageHeader = this._encodeMessageHeader(info)
       const rawChunk = Buffer.concat([
@@ -85,4 +87,4 @@ const int2array = (n, bytes) => {
 const int2arrayBE = (n, bytes) => int2array(n, bytes).reverse()
 const int2arrayLE = (n, bytes) => int2array(n, bytes)
 
-exports.ChunkStreamEncoder = ChunkStreamEncoder
+module.exports = ChunkStreamEncoder

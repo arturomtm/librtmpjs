@@ -1,1 +1,2 @@
-module.exports = require('./stream').ChunkStream
+exports.encoder = require('./encoder')
+exports.decoder = require('./decoder')
