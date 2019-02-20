@@ -7,9 +7,14 @@ const {
 const ControlStream = require('./control_stream')
 const UserControlStream = require('./user_control_stream')
 const NetConnection = require('./net_connection')
+const NetStream = require('./net_stream')
 
 class StreamFactory {
   constructor(socket) {
+    // starts after the net connection chunk stream
+    // improve this creating a cache for chunk streams
+    this.chunkId = 3
+
     this.socket = socket
     this.chunkStreamDecoder = socket.pipe(new ChunkStreamDecoder())
 
@@ -24,6 +29,14 @@ class StreamFactory {
     this.chunkStreamDecoder
       .pipe(stream)
     return stream
+  }
+  getChunkId() {
+    return ++this.chunkId
+  }
+  createNetStream(id, chunkId = this.getChunkId()) {
+    const netStream = new NetStream(id, chunkId)
+    netStream._streamFactory = this
+    return this._pipe(netStream)
   }
 }
 

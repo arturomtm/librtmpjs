@@ -13,7 +13,11 @@ class RTMPSocket {
       try {
         await netConnection.connect({app, swfUrl, tcUrl, pageUrl})
         const [info, streamId] = await netConnection.createStream()
-      } catch(error) {}
+        const netStream = streamFactory.createNetStream(streamId)
+        netStream.play('examplestream')
+      } catch(error) {
+        console.log(error)
+      }
     })
   }
 }
