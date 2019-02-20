@@ -8,6 +8,7 @@ class NetConnection extends CommandStream {
 
   constructor() {
     super(NetConnection.NET_CONNECTION_STREAM_ID, NetConnection.CHUNK_STREAM_ID)
+    this.transactionId = 0
   }
 
   connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}) {

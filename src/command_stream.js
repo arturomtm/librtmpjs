@@ -5,8 +5,8 @@ class CommandStream extends MessageStream {
 
   constructor(id, chunkId) {
     super(id, chunkId)
-    this.transactionId = 0
-    this.executionQueue = [null]
+    this.transactionId = -1
+    this.executionQueue = []
     this.amf = new AMF.AMF0()
   }
 
