@@ -33,7 +33,7 @@ class CommandStream extends MessageStream {
     return new Promise((_result, _error) => {
       const chunk = [commandName, this.getTransactionId(), ...commandObjects]
       const payload = this.amf.encode(...chunk)
-      this.executionQueue[this.transactionId] = { _result, _error }
+      this.executionQueue[this.transactionId] = { commandName, _result, _error, onStatus: console.log }
       this.push(payload)
     })
   }
