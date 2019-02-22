@@ -1,10 +1,10 @@
 const Transform = require('stream').Transform
 const extractChunkHeader = require('./header')
-const ProtocolConfig = require('./config')
 
 class ChunkStreamDecoder extends Transform {
-  constructor() {
+  constructor(protocolConfig) {
     super({ readableObjectMode: true })
+    this.config = protocolConfig
     this._chunkHeaders = new HeadersCache()
     this.buffer = Buffer.from([])
     this.message = Buffer.from([])
@@ -18,7 +18,7 @@ class ChunkStreamDecoder extends Transform {
     const newChunkHeader = extractChunkHeader(this.buffer)
     const lastChunkHeader = this._chunkHeaders.get(newChunkHeader.id)
     const chunkHeader = { ...lastChunkHeader, ...newChunkHeader }
-    const payloadLength = Math.min(128, chunkHeader.payloadLength - this.message.length)
+    const payloadLength = Math.min(this.config.size, chunkHeader.payloadLength - this.message.length)
     const messageLength = chunkHeader.length + payloadLength
 
     if (this.buffer.length >= messageLength) {

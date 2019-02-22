@@ -3,6 +3,7 @@ const {
   encoder: ChunkStreamEncoder,
   decoder: ChunkStreamDecoder
 } = require('./chunk_stream')
+const ChunkProtocolConfig = require('./chunk_stream/config')
 
 const ControlStream = require('./control_stream')
 const UserControlStream = require('./user_control_stream')
@@ -16,7 +17,7 @@ class StreamFactory {
     this.chunkId = 3
 
     this.socket = socket
-    this.chunkStreamDecoder = socket.pipe(new ChunkStreamDecoder())
+    this.chunkStreamDecoder = socket.pipe(new ChunkStreamDecoder(ChunkProtocolConfig))
 
     this.controlStream = this._pipe(new ControlStream(ChunkStreamParams))
     this.userControlStream = this._pipe(new UserControlStream())
