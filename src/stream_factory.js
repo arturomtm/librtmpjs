@@ -22,6 +22,8 @@ class StreamFactory {
     this.controlStream = this._pipe(new ControlStream(ChunkStreamParams))
     this.userControlStream = this._pipe(new UserControlStream())
     this.netConnection = this._pipe(new NetConnection())
+
+    this.controlStream.on("setChunkSize", (size) => { ChunkProtocolConfig.size = size })
   }
   _pipe(stream) {
     stream

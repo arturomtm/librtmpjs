@@ -15,10 +15,12 @@ class ControlStream extends MessageStream {
 
   _receive({ typeId, message }) {
     switch(typeId){
-    /* case ControlStream.SET_CHUNK_SIZE:
-      this.onSetChunkSize()
+    case ControlStream.SET_CHUNK_SIZE:
+      this.onSetChunkSize(
+        message.readUInt32BE(0)
+      )
       break
-    case ControlStream.ABORT:
+    /* case ControlStream.ABORT:
       this.onAbort()
       break
     case ControlStream.ACK:
@@ -40,6 +42,12 @@ class ControlStream extends MessageStream {
 
   // All these methods should be callbacks in response to a event
 
+  onSetChunkSize(size) {
+    // maybe this.emit should call onSetChunkSize (and all hooks)
+    // to process size before emitting it, as opposed to this
+    this.emit("setChunkSize", size)
+  }
+
   onAckWindowSize(windowSize) {}
 
   onSetPeerBandwidth(windowSize, limitType) {
@@ -49,9 +57,7 @@ class ControlStream extends MessageStream {
     }
   }
 
-  /* onSetChunkSize(size) {}
-
-  onAbort(chunkStreamId) {}
+  /* onAbort(chunkStreamId) {}
 
   onAck(seqNum) {} */
 }
