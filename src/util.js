@@ -11,7 +11,13 @@ function mandatoryParam(name) {
   throw new Error(`The parameter ${name} is mandatory`)
 }
 
+function codeToEvent(code) {
+  const [, command, action] = code.toLowerCase().split('.')
+  return `${command}:${action}`
+}
+
 module.exports = {
+  codeToEvent,
   generateRandomBuffer,
   mandatoryParam
 }

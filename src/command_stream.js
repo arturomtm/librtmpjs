@@ -1,5 +1,6 @@
 const AMF = require('amf')
 const MessageStream = require('./message_stream')
+const { codeToEvent } = require('./util')
 
 class CommandStream extends MessageStream {
 
@@ -29,11 +30,30 @@ class CommandStream extends MessageStream {
     return ++this.transactionId
   }
 
+  _onStatus(commandObject, infoObject) {
+    const { level, code } = infoObject
+    let event = level
+    switch(level) {
+    case 'status':
+      event = codeToEvent(code)
+      break
+    case 'warning':
+    case 'error':
+    default:
+    }
+    this.emit(event, infoObject)
+  }
+
   send(commandName, ...commandObjects) {
     return new Promise((_result, _error) => {
       const chunk = [commandName, this.getTransactionId(), ...commandObjects]
       const payload = this.amf.encode(...chunk)
-      this.executionQueue[this.transactionId] = { commandName, _result, _error, onStatus: console.log }
+      this.executionQueue[this.transactionId] = {
+        commandName,
+        _result,
+        _error,
+        onStatus: eventData => this._onStatus(...eventData)
+      }
       this.push(payload)
     })
   }
