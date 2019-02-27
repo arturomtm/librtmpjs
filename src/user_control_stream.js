@@ -5,6 +5,12 @@ class UserControlStream extends MessageStream {
     super(0, UserControlStream.CHUNK_STREAM_ID)
   }
 
+  _canProcessMessage(typeId) {
+    return [
+      UserControlStream.USER_CONTROL_MESSAGE
+    ].includes(typeId)
+  }
+
   _receive({ message }) {
     const eventType = message.readUInt16BE(0)
     const eventName = UserControlStream.EVENT_NAMES[eventType]
@@ -22,14 +28,6 @@ class UserControlStream extends MessageStream {
     }
 
     this.emit(eventName, eventData)
-  }
-
-  _write(chunk, encoding, done) {
-    if (chunk.typeId === UserControlStream.USER_CONTROL_MESSAGE) {
-      super._write(chunk, encoding, done)
-    } else {
-      done()
-    }
   }
 
 }

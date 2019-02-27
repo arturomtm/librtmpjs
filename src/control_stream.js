@@ -13,6 +13,16 @@ class ControlStream extends MessageStream {
     this.push(res)
   }
 
+  _canProcessMessage(typeId) {
+    return [
+      ControlStream.SET_CHUNK_SIZE,
+      ControlStream.ABORT,
+      ControlStream.ACK,
+      ControlStream.WINDOW_ACK_SIZE,
+      ControlStream.SET_PEER_BANDWIDTH
+    ].includes(typeId)
+  }
+
   _receive({ typeId, message }) {
     switch(typeId){
     case ControlStream.SET_CHUNK_SIZE:

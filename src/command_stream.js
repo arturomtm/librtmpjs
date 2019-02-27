@@ -58,13 +58,24 @@ class CommandStream extends MessageStream {
     })
   }
 
+  _canProcessMessage(typeId) {
+    return [
+      CommandStream.MESSAGE_TYPE_COMMAND_AMF0,
+      CommandStream.MESSAGE_TYPE_COMMAND_AMF3
+    ].includes(typeId)
+  }
+
   _receive({ message }) {
     const [
       method,
       transactionId,
       ...eventData
     ] = this.amf.decode(message)
-    this.executionQueue[transactionId][method](eventData)
+    const transaction = {
+      [method]: () => { console.warn(`${method} doesnt exist`) },
+      ...this.executionQueue[transactionId]
+    }
+    transaction[method](eventData)
   }
 }
 

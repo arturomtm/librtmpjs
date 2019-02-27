@@ -13,14 +13,19 @@ class MessageStream extends Duplex {
     return this.messageType
   }
   
+  _canProcessMessage(typeId) {
+    throw new Error("Cannot determine which message types this stream can process")
+  }
+
   _receive() {
     throw new Error('_receive must be implemented by derived classes')
   }
 
   // Underlying mandatory-to-implement Stream methods
   _write(chunk, encoding, done) {
+    // if (this.id === chunk.streamId) {
     if (this.chunkStreamId === chunk.id) {
-      this._receive(chunk)
+      if (this._canProcessMessage(chunk.typeId)) this._receive(chunk)
     }
     done()
   }
