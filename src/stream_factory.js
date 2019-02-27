@@ -9,6 +9,7 @@ const ControlStream = require('./control_stream')
 const UserControlStream = require('./user_control_stream')
 const NetConnection = require('./net_connection')
 const NetStream = require('./net_stream')
+const DataStream = require('./data_stream')
 
 class StreamFactory {
   constructor(socket) {
@@ -39,6 +40,7 @@ class StreamFactory {
   createNetStream(id, chunkId = this.getChunkId()) {
     const netStream = new NetStream(id, chunkId)
     netStream._streamFactory = this
+    netStream.data = this._pipe(new DataStream(id))
     return this._pipe(netStream)
   }
 }

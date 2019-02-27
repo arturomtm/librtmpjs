@@ -71,11 +71,8 @@ class CommandStream extends MessageStream {
       transactionId,
       ...eventData
     ] = this.amf.decode(message)
-    const transaction = {
-      [method]: () => { console.warn(`${method} doesnt exist`) },
-      ...this.executionQueue[transactionId]
-    }
-    transaction[method](eventData)
+    // TODO: definitively abstract this to avoid undefined errors!
+    this.executionQueue[transactionId][method](eventData)
   }
 }
 
