@@ -23,9 +23,8 @@ class MessageStream extends Duplex {
 
   // Underlying mandatory-to-implement Stream methods
   _write(chunk, encoding, done) {
-    // if (this.id === chunk.streamId) {
-    if (this.chunkStreamId === chunk.id) {
-      if (this._canProcessMessage(chunk.typeId)) this._receive(chunk)
+    if (this.id === chunk.streamId && this._canProcessMessage(chunk.typeId)) {
+      this._receive(chunk)
     }
     done()
   }

@@ -36,7 +36,7 @@ function decodeMessageHeader(header, basicHeader) {
   }
   switch(basicHeader.fmt) {
   case 0:
-    messageHeader.streamId = header.readUInt32BE(6) & 0x00FFFFFF
+    messageHeader.streamId = header.readUInt32LE(7)
   case 1:
     messageHeader.typeId = header.readUInt8(6)
     messageHeader.payloadLength = header.readUInt32BE(3) >> 8
