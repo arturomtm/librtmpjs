@@ -1,6 +1,6 @@
 const AMF = require('amf')
 const MessageStream = require('./message_stream')
-const { codeToEvent } = require('./util')
+const { codeToEvent } = require('../util')
 
 class CommandStream extends MessageStream {
 

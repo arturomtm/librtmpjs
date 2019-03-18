@@ -1,4 +1,4 @@
-const CommandStream = require('./command_stream')
+const CommandStream = require('./message_stream/command')
 const util = require('./util')
 
 class NetStream extends CommandStream {

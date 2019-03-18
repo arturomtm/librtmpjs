@@ -9,8 +9,8 @@ const ControlStream = require('./control_stream')
 const UserControlStream = require('./user_control_stream')
 const NetConnection = require('./net_connection')
 const NetStream = require('./net_stream')
-const DataStream = require('./data_stream')
-const VideoStream = require('./video_stream')
+const DataStream = require('./message_stream/data')
+const VideoStream = require('./message_stream/video')
 
 class StreamFactory {
   constructor(socket) {
