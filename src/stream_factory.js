@@ -10,6 +10,7 @@ const UserControlStream = require('./user_control_stream')
 const NetConnection = require('./net_connection')
 const NetStream = require('./net_stream')
 const DataStream = require('./data_stream')
+const VideoStream = require('./video_stream')
 
 class StreamFactory {
   constructor(socket) {
@@ -41,6 +42,7 @@ class StreamFactory {
     const netStream = new NetStream(id, chunkId)
     netStream._streamFactory = this
     netStream.data = this._pipe(new DataStream(id))
+    netStream.video = this._pipe(new VideoStream(id))
     return this._pipe(netStream)
   }
 }
