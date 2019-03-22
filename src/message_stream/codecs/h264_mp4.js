@@ -1,6 +1,6 @@
 const Codec = require('./codec')
 
-class H264_MP4 extends Codec {
+class H264MP4 extends Codec {
   constructor() {
     super()
     this.name = 'MP4 H.264'
@@ -9,4 +9,4 @@ class H264_MP4 extends Codec {
   }
 }
 
-module.exports = H264_MP4
+module.exports = H264MP4
