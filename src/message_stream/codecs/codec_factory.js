@@ -1,7 +1,7 @@
 const VIDEO_CODECS = [
   'RGB',
   'run-length',
-  'Sorenson\'s H.263',
+  require('./h263_sorenson'),
   'Screen 1',
   'On2 TrueMotion VP6',
   'VP6 with alpha',
