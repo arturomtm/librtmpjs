@@ -13,7 +13,7 @@ const COMMAND_FRAME = 5
 class VideoStream extends MessageStream {
 
   setCodec(codecId) {
-    this.codec = CodecFactory.getCodecInstance(codecId)
+    this.out = CodecFactory.getCodecInstance(codecId)
   }
 
   _canProcessMessage(typeId) {
@@ -41,9 +41,9 @@ class VideoStream extends MessageStream {
     case NON_KEY_FRAME:
     case DISPOSABLE_FRAME:
     case GENERATED_KEY_FRAME:
-      if (!this.codec) this.setCodec(tagInfo.codecId)
+      if (!this.out) this.setCodec(tagInfo.codecId)
       const data = message.slice(1)
-      this.codec.write({
+      this.out.write({
         ...tagInfo,
         data
       })
