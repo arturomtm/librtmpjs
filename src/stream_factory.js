@@ -27,12 +27,20 @@ class StreamFactory {
 
     this.controlStream.on("setChunkSize", (size) => { ChunkProtocolConfig.size = size })
   }
-  _pipe(stream) {
+  _pipeInput(stream) {
+    this.chunkStreamDecoder
+      .pipe(stream)
+    return stream
+  }
+  _pipeOutput(stream) {
     stream
       .pipe(new ChunkStreamEncoder(stream.chunkStreamId))
       .pipe(this.socket)
-    this.chunkStreamDecoder
-      .pipe(stream)
+    return stream
+  }
+  _pipe(stream) {
+    this._pipeInput(stream)
+    this._pipeOutput(stream)
     return stream
   }
   getChunkId() {
@@ -41,8 +49,8 @@ class StreamFactory {
   createNetStream(id, chunkId = this.getChunkId()) {
     const netStream = new NetStream(id, chunkId)
     netStream._streamFactory = this
-    netStream.data = this._pipe(new DataStream(id))
-    netStream.video = this._pipe(new VideoStream(id))
+    netStream.data = this._pipeInput(new DataStream(id))
+    netStream.video = this._pipeInput(new VideoStream(id))
     return this._pipe(netStream)
   }
 }
