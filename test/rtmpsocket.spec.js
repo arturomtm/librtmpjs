@@ -7,6 +7,7 @@ async function test() {
     netStream.on('error', console.log)
     netStream.on('play:start', console.log)
     netStream.play(config.playpath)
+    netStream.video.on("ready", out => out.pipe(process.stdout))
   } catch(e) {
     console.log(e)
   }
