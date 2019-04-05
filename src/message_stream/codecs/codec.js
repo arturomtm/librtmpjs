@@ -5,8 +5,9 @@ class Codec extends Duplex {
     super({ writableObjectMode: true })
   }
 
-  _write(video) {
+  _write(video, encoding, done) {
     console.log(video.data.toString('hex'))
+    done()
   }
 
   _read() {}
