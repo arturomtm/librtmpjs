@@ -17,6 +17,10 @@ class ChunkStreamDecoder extends Transform {
 
     const newChunkHeader = extractChunkHeader(this.buffer)
     const lastChunkHeader = this._chunkHeaders.get(newChunkHeader.id)
+    if (newChunkHeader.timestampDelta) {
+      lastChunkHeader.timestamp += newChunkHeader.timestampDelta
+      delete newChunkHeader.timestampDelta
+    }
     const chunkHeader = { ...lastChunkHeader, ...newChunkHeader }
     const payloadLength = Math.min(this.config.size, chunkHeader.payloadLength - this.message.length)
     const messageLength = chunkHeader.length + payloadLength

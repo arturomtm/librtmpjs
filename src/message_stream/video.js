@@ -30,7 +30,7 @@ class VideoStream extends MessageStream {
     return { codecId, frameType }
   }
 
-  _receive({ message }) {
+  _receive({ message, timestamp }) {
     const tagInfo = this._extractTagInfo(message[0])
     switch (tagInfo.frameType) {
     case COMMAND_FRAME:
@@ -46,6 +46,7 @@ class VideoStream extends MessageStream {
       if (!this.out) this.setCodec(tagInfo.codecId)
       this.push({
         ...tagInfo,
+        timestamp,
         data: message.slice(1)
       })
     }

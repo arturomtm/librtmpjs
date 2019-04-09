@@ -34,14 +34,16 @@ function decodeMessageHeader(header, basicHeader) {
   const messageHeader = {
     length: getMessageHeaderLength(basicHeader.fmt)
   }
+  let timestampType = 'timestampDelta'
   switch(basicHeader.fmt) {
   case 0:
+    timestampType = 'timestamp'
     messageHeader.streamId = header.readUInt32LE(7)
   case 1:
     messageHeader.typeId = header.readUInt8(6)
     messageHeader.payloadLength = header.readUInt32BE(3) >> 8
   case 2:
-    messageHeader.timestamp = header.readUInt32BE(0) >> 8
+    messageHeader[timestampType] = header.readUInt32BE(0) >> 8
   }
   return messageHeader
 }
