@@ -17,8 +17,8 @@
   "author": "arturomtm <arturomtm@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "Handshake": "git+https://github.com/arturomtm/rtmp.handshake.git",
-    "rtmp-amf": "^1.0.0"
+    "rtmp-amf": "^1.0.0",
+    "rtmp-handshake": "^1.0.0"
   },
   "devDependencies": {}
 }

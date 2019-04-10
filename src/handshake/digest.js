@@ -1,7 +1,7 @@
-const { C1, C2, S1 } = require('Handshake/dist')
+const { C1, C2, S1 } = require('rtmp-handshake')
 const Handshake = require("./rfc")
 
-class EncryptedHandshake extends Handshake {
+class DigestHandshake extends Handshake {
   c1(s0) {
     return C1.create().encode()
   }
@@ -11,4 +11,4 @@ class EncryptedHandshake extends Handshake {
   }
 }
 
-module.exports = EncryptedHandshake
+module.exports = DigestHandshake
