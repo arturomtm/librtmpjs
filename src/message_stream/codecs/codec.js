@@ -5,8 +5,13 @@ class Codec extends Duplex {
     super({ writableObjectMode: true })
   }
 
+  _decode(frame) {
+    throw new Error('_decode must be implemented by derived classes')
+  }
+
   _write(video, encoding, done) {
-    console.log(video.data.toString('hex'))
+    const tag = this._decode(video)
+    this.push(tag)
     done()
   }
 

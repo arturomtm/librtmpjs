@@ -47,7 +47,7 @@ class VideoStream extends MessageStream {
       this.push({
         ...tagInfo,
         timestamp,
-        data: message.slice(1)
+        data: message
       })
     }
   }
