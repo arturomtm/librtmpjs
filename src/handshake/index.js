@@ -1,3 +1,3 @@
 exports.Handshake = require('./rfc')
-exports.RFCHandshake = require('./rfc')
-exports.EncryptedHandshake = require('./encrypted')
+exports.PlainHandshake = exports.Handshake
+exports.DigestHandshake = require('./digest')

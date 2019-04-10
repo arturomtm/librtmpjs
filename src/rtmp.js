@@ -1,11 +1,11 @@
 const net = require('net')
-const { Handshake, EncryptedHandshake } = require('./handshake')
+const { PlainHandshake } = require('./handshake')
 const StreamFactory = require('./stream_factory')
 
-const connect = async ({host = 'localhost', port = 1935, app, swfUrl, tcUrl, pageUrl} = {}) =>
+const connect = async ({host = 'localhost', port = 1935, app, swfUrl, tcUrl, pageUrl} = {}, Handshake = PlainHandshake) =>
   new Promise((resolve, reject) => {
     const socket = net.connect({host, port})
-    const handshake = new EncryptedHandshake(socket)
+    const handshake = new Handshake(socket)
     handshake.once("uninitialized", () => handshake.sendC0C1())
     handshake.once("handshake:done", async () => {
       const streamFactory = new StreamFactory(socket)

@@ -1,11 +1,12 @@
 const fs = require('fs')
 const rtmp = require('../src/rtmp')
+const { DigestHandshake } = require('../src/handshake')
 const Flv = require('../src/message_stream/containers/flv')
 const config = require('./config')
 
 async function test() {
   try {
-    const netStream = await rtmp.connect(config)
+    const netStream = await rtmp.connect(config, DigestHandshake)
     netStream.on('error', console.log)
     netStream.on('play:start', console.log)
     netStream.play(config.playpath)
