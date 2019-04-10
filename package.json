@@ -18,7 +18,7 @@
   "license": "MIT",
   "dependencies": {
     "Handshake": "git+https://github.com/arturomtm/rtmp.handshake.git",
-    "amf": "git+https://github.com/arturomtm/amf.git"
+    "rtmp-amf": "^1.0.0"
   },
   "devDependencies": {}
 }

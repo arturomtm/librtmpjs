@@ -1,4 +1,4 @@
-const AMF = require('amf')
+const AMF = require('rtmp-amf')
 const MessageStream = require('./message_stream')
 
 class DataStream extends MessageStream {
