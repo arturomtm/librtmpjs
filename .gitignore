@@ -1,6 +1,6 @@
 .vscode
 node_modules/
-test/config.json
+test/*config.json
 test/mocks/*.config.js
 *.flv
 *.pcapng
