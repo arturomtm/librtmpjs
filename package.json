@@ -2,7 +2,7 @@
   "name": "librtmp",
   "version": "0.1.0",
   "description": "librtmp for javascript",
-  "main": "rtmp.js",
+  "main": "src/rtmp.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
