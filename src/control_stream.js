@@ -8,7 +8,7 @@ class ControlStream extends MessageStream {
   ackWindowSize(size = this.protocolParams.windowSize) {
     this.messageType = ControlStream.WINDOW_ACK_SIZE
     this.protocolParams.ackWindowSize = size
-    const res = new Buffer(4)
+    const res = Buffer.alloc(4)
     res.writeUInt32BE(size)
     this.push(res)
   }

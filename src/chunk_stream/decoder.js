@@ -38,7 +38,7 @@ class ChunkStreamDecoder extends Transform {
           ...chunkHeader,
           message: this.message
         })
-        this.message = new Buffer(0)
+        this.message = Buffer.alloc(0)
       }
       this.processChunk()
     }

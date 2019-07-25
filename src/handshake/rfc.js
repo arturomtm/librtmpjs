@@ -27,11 +27,11 @@ class RFCHandshake extends EventEmitter {
   }
 
   _resetBuffer() {
-    this._buffer = new Buffer(0)
+    this._buffer = Buffer.alloc(0)
   }
 
   c0() {
-    const packet = new Buffer(1)
+    const packet = Buffer.alloc(1)
     packet.writeUInt8(PROTOCOL_VERSION)
     return packet
   }
