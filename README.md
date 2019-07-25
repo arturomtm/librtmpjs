@@ -88,9 +88,11 @@ NetConnection represents a connection to an application contained in a Media Ser
 
   Request to the Media Server create a stream. It returns the full response as an array containing the `streamId`. This id should be used to instantiate the corresponding NetStream class.
 
-- `netConnection.call()`
+- `netConnection.call(procedureName, ...arguments)`
 
-  Not implemented yet
+  Calls a remote procedure or method on the Media Server. Arguments are passed to the called function.
+
+  The returned Promise fulfills with the response of the RPC.
 
 - `netConnection.close()`
   
@@ -103,6 +105,10 @@ To modify the behaviour of NetConnection, the desirable way is to extend it and 
   It receives the arguments that `connect()` method receives. It must return an object with not only the mandatory properties, like `tcUrl`, but also some information the server would need as specified in RFC. This includes: `flashver`, `fpad`, `audioCodecs`, `videoCodecs`, `videoFunction` and `objectEncoding`.
 
   The last one's value must match to the one's the AMF encoding library that NetConnection uses is encoding in. 
+
+- `netConnection.getCallCommand(procedureName, ...arguments)`
+
+  It receives the arguments that `call()` method receives. By default it uses a command object of `null`.
 
 - `netConnection.getCreateStreamCommand()`
 
