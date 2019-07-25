@@ -94,7 +94,7 @@ NetConnection represents a connection to an application contained in a Media Ser
 
 - `netConnection.close()`
   
-  Not described in RFC
+  Not described in RFC. Closes the connection to the Media Server.
 
 To modify the behaviour of NetConnection, the desirable way is to extend it and override the methods that generate the commands for the API methods:
 
