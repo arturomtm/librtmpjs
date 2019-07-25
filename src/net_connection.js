@@ -16,8 +16,10 @@ class NetConnection extends CommandStream {
     return this.send('connect', command)
   }
 
-  call() {
-    throw new Error('NetConnection.call() not implemented yet')
+  async call(procedureName = util.mandatoryParam('procedureName'), ...args) {
+    const command = this.getCallCommand(procedureName, ...args)
+    const [, response] = await this.send(...command)
+    return response
   }
 
   close() {
@@ -44,6 +46,11 @@ class NetConnection extends CommandStream {
     pageUrl && (commandObject.pageUrl = pageUrl)
     swfUrl && (commandObject.swfUrl = swfUrl)
     return commandObject
+  }
+
+  getCallCommand(procedureName, ...args) {
+    const commandObject = null;
+    return [procedureName, commandObject, ...args]
   }
 
   getCreateStreamCommand() {
