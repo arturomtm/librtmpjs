@@ -63,7 +63,7 @@ class ChunkStreamEncoder extends Transform {
       const basicHeader = this._encodeBasicHeader()
       const messageHeader = this._encodeMessageHeader(info)
       const rawChunk = Buffer.concat([
-        new Buffer([...basicHeader, ...messageHeader]),
+        Buffer.from([...basicHeader, ...messageHeader]),
         chunk
       ])
       this.push(rawChunk)

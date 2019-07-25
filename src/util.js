@@ -1,5 +1,5 @@
 function generateRandomBuffer(len){
-  var packet = new Buffer(len);
+  var packet = Buffer.alloc(len);
   for (var i = 0; i < len; i++){
     var byte = Math.floor(Math.random() * 256);
     packet.writeUInt8(byte, i);
