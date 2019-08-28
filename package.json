@@ -17,6 +17,7 @@
   "author": "arturomtm <arturomtm@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "pump": "^3.0.0",
     "rtmp-amf": "^1.0.0",
     "rtmp-handshake": "^1.0.0"
   },

@@ -21,7 +21,7 @@ class NetConnection extends CommandStream {
   }
 
   close() {
-    throw new Error('NetConnection.close() is not defined in RFC')
+    this.end()
   }
 
   createStream() {

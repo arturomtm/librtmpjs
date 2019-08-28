@@ -1,3 +1,4 @@
+const pump = require('pump')
 const ChunkStreamParams = require('./chunk_stream/config')
 const {
   encoder: ChunkStreamEncoder,
@@ -19,7 +20,7 @@ class StreamFactory {
     this.chunkId = 3
 
     this.socket = socket
-    this.chunkStreamDecoder = socket.pipe(new ChunkStreamDecoder(ChunkProtocolConfig))
+    this.chunkStreamDecoder = pump(this.socket, new ChunkStreamDecoder(ChunkProtocolConfig))
 
     this.controlStream = this._pipe(new ControlStream(ChunkStreamParams))
     this.userControlStream = this._pipe(new UserControlStream())
@@ -28,17 +29,20 @@ class StreamFactory {
     this.controlStream.on("setChunkSize", (size) => { ChunkProtocolConfig.size = size })
   }
   _pipeInput(stream) {
-    this.chunkStreamDecoder
-      .pipe(stream)
-    return stream
+    return pump(this.chunkStreamDecoder, stream)
   }
   _pipeOutput(stream) {
-    stream
-      .pipe(new ChunkStreamEncoder(stream.chunkStreamId))
-      .pipe(this.socket)
+    const encoder = pump(stream, new ChunkStreamEncoder(stream.chunkStreamId))
+    encoder.pipe(this.socket)
+
     return stream
   }
-  _pipe(stream) {
+  _pipe(stream, isTransient = false) {
+    if (!isTransient) {
+      stream.on('finish', () => {
+        this.chunkStreamDecoder.end()
+      })
+    }
     this._pipeInput(stream)
     this._pipeOutput(stream)
     return stream
@@ -51,7 +55,7 @@ class StreamFactory {
     netStream._streamFactory = this
     netStream.data = this._pipeInput(new DataStream(id))
     netStream.video = this._pipeInput(new VideoStream(id))
-    return this._pipe(netStream)
+    return this._pipe(netStream, true)
   }
 }
 
