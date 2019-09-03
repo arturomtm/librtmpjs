@@ -11,9 +11,9 @@ class NetConnection extends CommandStream {
     this.transactionId = 0
   }
 
-  connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}) {
+  connect({app = 'default', tcUrl = util.mandatoryParam('tcUrl'), pageUrl, swfUrl}, ...args) {
     const command = this.getConnectCommand({app, tcUrl, pageUrl, swfUrl})
-    return this.send('connect', command)
+    return this.send('connect', command, ...args)
   }
 
   call() {
